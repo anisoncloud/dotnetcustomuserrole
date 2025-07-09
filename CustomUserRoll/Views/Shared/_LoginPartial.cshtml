@@ -14,17 +14,13 @@
                 <li><a class="dropdown-item" href="#">Another action</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#">Something else here</a></li>
+                <li><a class="dropdown-item" href="#">View Profile</a></li>
+                <li><a class="dropdown-item" href="#">Change Password</a></li>                
                 <li class="dropdown-item">
                     <form id="logoutForm" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-link nav-link text-dark">Logout</button>
+                        <button type="submit" class="btn btn-warning">Logout</button>
                     </form>
-                </li>
-                <li class="dropdown-item">
-                <a href="#">View Profile</a>
-                </li>
-                <li class="dropdown-item">
-                    <a href="#">Change Password</a>
                 </li>
             </ul>
         </li>

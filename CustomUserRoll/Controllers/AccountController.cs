@@ -47,10 +47,11 @@ namespace CustomUserRoll.Controllers
                 else
                 {
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    return RedirectToAction("LogIn", "Account");
                 }
                 // Logic to authenticate user
                 // If successful, redirect to a secure area
-                return RedirectToAction("Index", "Home");
+                
             }
             return View(model);
         }
@@ -83,7 +84,7 @@ namespace CustomUserRoll.Controllers
                         await _roleManager.CreateAsync(new IdentityRole("User"));
                     }
                     await _userManager.AddToRoleAsync(user, "User");
-                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    await _signInManager.SignInAsync(user, isPersistent: true);
                     return RedirectToAction("Index", "Home");
                 }
 
@@ -104,6 +105,80 @@ namespace CustomUserRoll.Controllers
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        public IActionResult VerifyEmail()
+        {
+            if (_signInManager.IsSignedIn(User))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyEmail(VerifyEmailViewModel model)
+        {
+            if (!ModelState.IsValid) 
+            {
+                return View(model);
+            }
+
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user==null)
+                {
+                    ModelState.AddModelError("", "User not Found");
+                    return View(model);
+                }
+                else
+                {
+                    return RedirectToAction("ChangePassword", "Account", new { username = user.UserName });
+                }
+           
+        }
+
+        [HttpGet]
+        public IActionResult ChangePassword(string username) 
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("VerifyEmail", "Account");
+            }
+            return View(new ChangePasswordViewModel { Email = username });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if(!ModelState.IsValid)
+            {
+                ModelState.AddModelError("", "Something Went Wrong");
+                return View(model);
+            }
+            else
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                {
+                    ModelState.AddModelError("", "User not found");
+                    return View(model);
+                }
+                var result = await _userManager.RemovePasswordAsync(user);
+                if (result.Succeeded)
+                {
+                    result = await _userManager.AddPasswordAsync(user, model.NewPassword);
+                    return RedirectToAction("Login", "Account");
+                }
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                    return View(model);
+                }                
+            }
+            return View(model);
         }
     }
 }
